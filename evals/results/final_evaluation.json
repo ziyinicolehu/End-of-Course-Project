@@ -1,0 +1,88 @@
+{
+  "generated_utc": "2026-09-28T08:12:17Z",
+  "run_info": {
+    "forecast_and_reorder_seed": 6201,
+    "llm_evaluation_seed": 6204,
+    "llm_evidence_source": "evals/results/llm_live_evaluation_v4_seed6204.json",
+    "live_api_call_made": false
+  },
+  "forecast": {
+    "patterns": [
+      {
+        "pattern": "fast_moving",
+        "n_test_rows": 1000,
+        "baseline_wmape": 0.15889050921608194,
+        "ml_wmape": 0.12477541661527423,
+        "ml_beats_baseline": true
+      },
+      {
+        "pattern": "slow_moving",
+        "n_test_rows": 1000,
+        "baseline_wmape": 0.38512414046506743,
+        "ml_wmape": 0.29624732939253806,
+        "ml_beats_baseline": true
+      },
+      {
+        "pattern": "seasonal",
+        "n_test_rows": 1000,
+        "baseline_wmape": 0.3350554928902474,
+        "ml_wmape": 0.2349120547144309,
+        "ml_beats_baseline": true
+      },
+      {
+        "pattern": "intermittent",
+        "n_test_rows": 1000,
+        "baseline_wmape": 1.0791428223548034,
+        "ml_wmape": 0.9479069813968557,
+        "ml_beats_baseline": true
+      },
+      {
+        "pattern": "promotion_driven",
+        "n_test_rows": 1000,
+        "baseline_wmape": 0.44371837988859264,
+        "ml_wmape": 0.19042252069681986,
+        "ml_beats_baseline": true
+      }
+    ],
+    "n_patterns_ml_won": 5,
+    "n_patterns_total": 5
+  },
+  "reorder": {
+    "baseline_total_lost_demand": 13112.451589388465,
+    "ml_total_lost_demand": 8214.962316535064,
+    "lost_demand_reduction_pct": 37.34991309189504,
+    "lost_demand_reduction_threshold_pct": 10.0,
+    "baseline_mean_excess_inventory": 55.57838435205134,
+    "ml_mean_excess_inventory": 49.53831581317854,
+    "excess_inventory_increase_pct": -10.867657650163167,
+    "excess_inventory_increase_threshold_pct": 5.0,
+    "passes": true
+  },
+  "llm": {
+    "evidence_source": "evals/results/llm_live_evaluation_v4_seed6204.json",
+    "evidence_seed": 6204,
+    "loaded": true,
+    "total_live_decisions": 25,
+    "api_errors": 0,
+    "deterministic_passes": 25,
+    "human_review_passes": 23,
+    "human_review_failures": 2,
+    "pending_human_reviews": 0,
+    "combined_passes": 23,
+    "combined_failures": 2,
+    "failed_skus": [
+      "PROMO-012",
+      "SEAS-040"
+    ],
+    "failed_decisions": [
+      {
+        "sku_id": "PROMO-012",
+        "limitation": "Explanation numbers and prose are accurate, but recommendation_confidence is high even though the 6-week supplier lead time exceeds the 4-week forecast horizon. V4 explicitly says confidence should not be high in this case."
+      },
+      {
+        "sku_id": "SEAS-040",
+        "limitation": "Explanation numbers and prose are accurate, but recommendation_confidence is high even though the 8-week supplier lead time exceeds the 4-week forecast horizon. V4 explicitly says confidence should not be high in this case."
+      }
+    ]
+  }
+}

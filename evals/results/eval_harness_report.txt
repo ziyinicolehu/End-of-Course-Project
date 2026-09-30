@@ -1,0 +1,82 @@
+======================================================================
+RestockIQ -- combined eval harness (generated 2026-09-28T08:12:17Z UTC)
+======================================================================
+Forecast and reorder were run live, just now, using seed=6201. No live API call was made by this harness at any point.
+
+[1/3] FORECAST EVAL (models.run_forecast_eval, seed=6201)
+
+RestockIQ forecast eval -- seed=6201
+  training forecast-origin weeks: 0-70
+  unused gap weeks (targets would reach into the test period): 71-74
+  test forecast-origin weeks: 75-99
+
+pattern               n_test  baseline_wmape    ml_wmape   ml_beats_baseline
+----------------------------------------------------------------------------
+fast_moving             1000          0.1589      0.1248                True
+slow_moving             1000          0.3851      0.2962                True
+seasonal                1000          0.3351      0.2349                True
+intermittent            1000          1.0791      0.9479                True
+promotion_driven        1000          0.4437      0.1904                True
+
+ML beats the moving-average baseline on every pattern in this run.
+
+[2/3] REORDER EVAL -- locked business success metric (reorder.run_reorder_eval, seed=6201)
+
+RestockIQ reorder eval -- seed=6201, simulated weeks 75-99
+
+pattern               n_rows   base_lost   ml_lost  base_mean_excess  ml_mean_excess
+------------------------------------------------------------------------------------
+fast_moving             1000      4226.4    2465.0             29.36           26.60
+slow_moving             1000       266.4     163.8             16.62           15.42
+seasonal                1000      4860.2    3598.4            120.66          114.20
+intermittent            1000       250.7     221.6             30.22           28.10
+promotion_driven        1000      3508.7    1766.1             81.03           63.37
+
+lost_demand_reduction_pct     = 37.35%  (target >= 10%)
+excess_inventory_increase_pct = -10.87%  (target <= 5%)
+PASSES: True
+
+[3/3] LLM EXPLANATION EVAL -- specified saved evidence (final held-out evaluation, unless a different file was given), NO live call made
+
+  evidence file: evals/results/llm_live_evaluation_v4_seed6204.json
+  evidence seed: 6204 (asserted for this file -- not read from it; the saved evidence does not record which seed produced it)
+
+RestockIQ explanation eval -- COMBINED REPORT (25 record(s))
+
+[PASS (deterministic + human review)          ] sku=FM-001     week=88 pattern=fast_moving
+[PASS (deterministic + human review)          ] sku=FM-018     week=91 pattern=fast_moving
+[PASS (deterministic + human review)          ] sku=FM-005     week=77 pattern=fast_moving
+[PASS (deterministic + human review)          ] sku=FM-002     week=93 pattern=fast_moving
+[PASS (deterministic + human review)          ] sku=FM-024     week=78 pattern=fast_moving
+[PASS (deterministic + human review)          ] sku=INT-034    week=93 pattern=intermittent
+[PASS (deterministic + human review)          ] sku=INT-030    week=88 pattern=intermittent
+[PASS (deterministic + human review)          ] sku=INT-022    week=86 pattern=intermittent
+[PASS (deterministic + human review)          ] sku=INT-011    week=85 pattern=intermittent
+[PASS (deterministic + human review)          ] sku=INT-009    week=94 pattern=intermittent
+[PASS (deterministic + human review)          ] sku=PROMO-040  week=93 pattern=promotion_driven
+[PASS (deterministic + human review)          ] sku=PROMO-002  week=85 pattern=promotion_driven
+[PASS (deterministic + human review)          ] sku=PROMO-038  week=83 pattern=promotion_driven
+[PASS (deterministic + human review)          ] sku=PROMO-028  week=90 pattern=promotion_driven
+[FAIL (human review: prose inaccurate)        ] sku=PROMO-012  week=83 pattern=promotion_driven
+[PASS (deterministic + human review)          ] sku=SEAS-014   week=76 pattern=seasonal
+[PASS (deterministic + human review)          ] sku=SEAS-016   week=82 pattern=seasonal
+[PASS (deterministic + human review)          ] sku=SEAS-023   week=76 pattern=seasonal
+[FAIL (human review: prose inaccurate)        ] sku=SEAS-040   week=78 pattern=seasonal
+[PASS (deterministic + human review)          ] sku=SEAS-033   week=83 pattern=seasonal
+[PASS (deterministic + human review)          ] sku=SM-030     week=92 pattern=slow_moving
+[PASS (deterministic + human review)          ] sku=SM-024     week=84 pattern=slow_moving
+[PASS (deterministic + human review)          ] sku=SM-007     week=83 pattern=slow_moving
+[PASS (deterministic + human review)          ] sku=SM-025     week=95 pattern=slow_moving
+[PASS (deterministic + human review)          ] sku=SM-001     week=90 pattern=slow_moving
+
+deterministic+human PASS: 23  |  pending human review: 0  |  failed deterministic: 0  |  failed human review: 2  |  API errors: 0  |  template (n/a): 0
+EVALUATION COMPLETE: every live decision was attempted, passed the deterministic checks, and has been human-reviewed, but 2 of 25 response(s) failed strict human review -- see the records above. The LLM explanation phase did NOT meet the all-pass criterion for this sample.
+
+======================================================================
+SUMMARY -- each layer against its own locked contract; never blended into one score
+======================================================================
+Forecast:  ML beats the moving-average baseline on 5/5 demand patterns (diagnostic -- WMAPE is not itself a pass/fail gate; see the table above).
+Reorder:   lost_demand_reduction=37.35% (target >=10%), excess_inventory_increase=-10.87% (target <=5%) -- PASSES: True
+LLM:       23/25 live decisions passed deterministic + strict human review on the loaded evaluation (see LLM_EXPLANATION_DESIGN.md for the full account, including any documented limitations).
+
+Each layer above is graded against its own locked contract (CONTRACT.md for forecast/reorder, EXPLANATION_CONTRACT.md for the LLM layer) and reported on its own terms -- this harness does not combine them into a single pass/fail verdict.
