@@ -4,6 +4,73 @@ Reorder decision support for SMB wholesale apparel distributors: a narrow-ML dem
 
 See `CONTRACT.md` for the locked eval definitions (stockout, excess inventory, WMAPE, success metric) this project is built and graded against.
 
+## Product overview
+
+**Persona.** Alex is a purchasing manager at a wholesale apparel distributor. Each week, Alex must decide whether and how much to reorder for an existing SKU at one location, balancing stockout-related lost demand against cash tied up in excess inventory.
+
+**Inputs.** RestockIQ uses weekly SKU demand history, planned price and promotion information, physical inventory, outstanding supplier orders, supplier lead time, and past demand variability.
+
+**Outputs.** For a selected SKU-week, the system presents a four-week demand forecast, a deterministic reorder quantity and stock target, the calculation evidence, a plain-language explanation, and any relevant uncertainty warning. The output is advisory: Alex retains authority to accept, adjust, or reject it.
+
+### High-level architecture
+
+```mermaid
+flowchart LR
+    A[Seeded synthetic SKU history] --> B[Feature engineering]
+    B --> C[ML four-week forecast]
+    C --> D[Deterministic reorder policy]
+    D --> E[Structured decision record]
+    E --> F[GPT-4o-mini explanation]
+    D --> G[Streamlit interface]
+    F --> G
+    G --> H[Alex reviews and decides]
+```
+
+The LLM is rented external language capability called through OpenRouter. It explains a completed structured decision but does not forecast demand, calculate the order quantity, use tools, or submit a purchase order. All data generation, forecasting, reorder logic, evaluation, and serving code is owned in this repository.
+
+### Targeted and achieved metrics
+
+| Metric | Target | Achieved |
+| --- | ---: | ---: |
+| Lost-demand reduction vs. moving-average policy | At least 10% | **37.35% reduction** |
+| Mean excess-inventory change vs. moving-average policy | No more than 5% increase | **10.87% reduction** |
+| Forecast reporting | WMAPE for all five demand patterns | **All five reported** |
+| Explanation automatic checks | Report separately | **25/25 passed** |
+| Explanation strict human review | Report separately | **23/25 passed** |
+
+The business results are seeded synthetic-simulation outcomes, not measured commercial ROI. Forecast WMAPE remains weakest for intermittent demand, and two of the 25 final explanations used unjustifiably high confidence when supplier lead time exceeded the forecast horizon.
+
+### Evidence guide
+
+| Evidence | Start here | Supporting files |
+| --- | --- | --- |
+| Data | [`DATA.md`](DATA.md) | `data/generated/`, `data/pattern_parameters.json`, `PARAMETER_DESIGN.md` |
+| Forecast and reorder evaluation | [`EVALS.md`](EVALS.md) | `CONTRACT.md`, `REORDER_POLICY.md`, `evals/results/final_evaluation.json` |
+| Explanation evaluation | [`EVALS.md`](EVALS.md) | `EXPLANATION_CONTRACT.md`, `LLM_EXPLANATION_DESIGN.md`, `evals/results/llm_live_evaluation_v4_seed6204*.json` |
+| Human-readable final evidence | `evals/results/eval_harness_report.txt` | Generated with `python -m evals.run_all` |
+
+## Quick start
+
+From the repository root:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+python -m pytest tests/ -q
+streamlit run app/app.py
+```
+
+The interface works without an API key by displaying saved evaluation evidence. A new live explanation is optional and requires an OpenRouter key entered into the Streamlit sidebar or supplied as the `OPENROUTER_API_KEY` environment variable. The key is never required to reproduce the forecast or reorder evaluations.
+
+To reproduce the three-layer evaluation summary without making a new API call:
+
+```bash
+python -m evals.run_all
+```
+
+This regenerates the forecast and reorder results locally using seed 6201 and loads the checked-in, human-reviewed V4 explanation evidence from seed 6204. See [`EVALS.md`](EVALS.md) for the evaluation design and artifact map.
+
 ## Status
 
 LLM explanation implementation and evaluation are complete through V4. Prompt development on seed 6201 progressed from 1/5 to 3/5 to 5/5 acceptable explanations. Held-out V3 evaluation scored 4/5 on seed 6202 and 17/25 on seed 6203, exposing unsupported wording and an inventory-timing mismatch. V4 corrected that contract and was evaluated once on 25 new seed-6204 decisions: **25/25 passed deterministic checks and 23/25 passed strict human review**. The two remaining failures used high confidence despite lead times longer than the four-week forecast horizon; the factual prose itself no longer repeated the V3 errors. See "LLM explanation layer: status" below.
@@ -13,6 +80,8 @@ LLM explanation implementation and evaluation are complete through V4. Prompt de
 ```
 restockiq/
 ├── CONTRACT.md                     locked eval definitions (read this first)
+├── DATA.md                         concise guide to checked-in data and generation
+├── EVALS.md                        concise guide to evaluation design and evidence
 ├── REORDER_POLICY.md               locked reorder-quantity formula (read before Phase 4 / reorder/)
 ├── EXPLANATION_CONTRACT.md         locked LLM explanation-layer contract (read before Phase 5 / llm/)
 ├── PARAMETER_DESIGN.md             class-3 prompting transcript for the data generator
@@ -21,7 +90,7 @@ restockiq/
 │   ├── llm_parameter_design.py     prompts a model for per-pattern parameter ranges (or uses the cached transcript)
 │   ├── pattern_parameters.json     the reviewed ranges the generator actually reads
 │   ├── generator.py                seeded synthetic data generator (~200 SKUs x 104 weeks)
-│   └── generated/                  generator output (gitignored -- regenerate with the command below)
+│   └── generated/                  checked-in seed-6201 evaluation data (reproducible with the command below)
 ├── models/
 │   ├── features.py                  leakage-safe feature engineering (past-only lag/rolling + known-future promo/price)
 │   ├── baseline.py                  moving-average "Non-AI baseline" forecast
@@ -288,7 +357,7 @@ summarized as a single "done" or "pending":
    separate values, and the model must cite both so grounding can be
    checked. The prompt also prohibits unsupported “optimal inventory” and
    “busy season” claims and includes two targeted examples (one order and
-   one no-order case). All 322 local tests pass. V3 and seed 6203 remain
+   one no-order case). All 324 local tests pass. V3 and seed 6203 remain
    preserved as historical evidence. V4 was run once on 25 balanced cases
    from untouched seed 6204: all 25 API calls succeeded, all 25 passed the
    deterministic checks, and 23/25 passed strict human review. The factual

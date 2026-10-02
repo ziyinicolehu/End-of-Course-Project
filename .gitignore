@@ -5,6 +5,5 @@ __pycache__/
 *.egg-info/
 .env
 data/pattern_parameters.proposed.json
-data/generated/
 .DS_Store
 *.bak
