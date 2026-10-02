@@ -51,7 +51,14 @@ The business results are seeded synthetic-simulation outcomes, not measured comm
 
 ## Quick start
 
-From the repository root:
+Clone the repository and enter the project folder:
+
+```bash
+git clone https://github.com/ziyinicolehu/End-of-Course-Project.git
+cd End-of-Course-Project
+```
+
+Create an isolated Python environment, install the dependencies, run the tests, and start the interface:
 
 ```bash
 python3 -m venv .venv
