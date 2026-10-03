@@ -14,17 +14,7 @@ See `CONTRACT.md` for the locked eval definitions (stockout, excess inventory, W
 
 ### High-level architecture
 
-```mermaid
-flowchart LR
-    A[Seeded synthetic SKU history] --> B[Feature engineering]
-    B --> C[ML four-week forecast]
-    C --> D[Deterministic reorder policy]
-    D --> E[Structured decision record]
-    E --> F[GPT-4o-mini explanation]
-    D --> G[Streamlit interface]
-    F --> G
-    G --> H[Alex reviews and decides]
-```
+![RestockIQ high-level architecture](docs/restockiq-high-level-architecture.png)
 
 The LLM is rented external language capability called through OpenRouter. It explains a completed structured decision but does not forecast demand, calculate the order quantity, use tools, or submit a purchase order. All data generation, forecasting, reorder logic, evaluation, and serving code is owned in this repository.
 
